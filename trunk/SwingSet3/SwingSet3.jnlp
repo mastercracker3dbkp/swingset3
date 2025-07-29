@@ -15,5 +15,5 @@
     <jar href="lib/swing-worker.jar"/>
     <jar href="lib/swingx.jar"/>
   </resources>
-  <application-desc main-class="swingset3.SwingSet3"/>
+  <application-desc main-class="com.sun.swingset3.SwingSet3"/>
 </jnlp>
