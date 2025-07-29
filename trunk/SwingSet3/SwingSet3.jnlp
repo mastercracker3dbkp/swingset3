@@ -9,7 +9,7 @@
     <shortcut online="true"/>
   </information>
   <resources>
-    <jar href="SwingSet3.jar" main="false"/>
+    <jar href="lib/SwingSet3.jar" main="false"/>
     <jar href="lib/AppFramework.jar"/>
     <jar href="lib/TimingFramework.jar"/>
     <jar href="lib/swing-worker.jar"/>
