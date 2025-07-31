@@ -1,4 +1,4 @@
-# swingset3.1#
+# swingset3.1 #
 
 SwingSet3.1 Application, taken from the svn repo at https://java.net/projects/swingset3 and trunk put directly in here.
 
