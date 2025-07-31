@@ -28,7 +28,6 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package com.sun.swingset3.codeview;
 
 import java.awt.AlphaComposite;
@@ -60,12 +59,14 @@ import javax.swing.text.Highlighter;
 import com.sun.swingset3.utilities.RoundedBorder;
 import com.sun.swingset3.utilities.RoundedPanel;
 import com.sun.swingset3.utilities.Utilities;
+import java.net.URI;
+import java.nio.file.Paths;
 
 /**
  * GUI component for viewing a set of one or more Java source code files,
- * providing the user with the ability to easily highlight specific code fragments.
- * A tabbedpane is used to control which source code file is shown within the set
- * if more than one file is loaded.
+ * providing the user with the ability to easily highlight specific code
+ * fragments. A tabbedpane is used to control which source code file is shown
+ * within the set if more than one file is loaded.
  * <p>
  * Example usage:
  * <pre><code>
@@ -73,53 +74,50 @@ import com.sun.swingset3.utilities.Utilities;
  *    codeViewer.setSourceFiles(mySourceURLs);
  *    frame.add(codeViewer);
  * </code></pre>
- * 
- * <p>
- * When loading the source code, this viewer will automatically parse the files for
- * any source fragments which are marked with &quot;snippet&quot; start/end tags that
- * are embedded within Java comments.  The viewer will allow the user to highlight 
- * these code snippets for easier inspection of specific code.
- * <p>
- * The text following immediately after the start tag will be used
- * as the key for that snippet.  Multiple snippets may share the same 
- * key, defining a &quot;snippet set&quot;.  Snippet sets may even span across 
- * multiple source files.
- * The key for each snippet set is displayed in a combobox to allow the user to 
- * select which snippet set should be highlighted.  For example:<p>
- * <pre><code>
- *    //<snip>Create dog array
- *    ArrayList dogs = new ArrayList();
- *    //</snip>
  *
- *    [other code...]
- *
- *    //<snip>Create dog array
- *    dogs.add("Labrador");
- *    dogs.add("Golden Retriever");
- *    dogs.add("Australian Shepherd");
- *    //</snip>
- * </code></pre>
- * The above code would create a snippet set (containing 2 snippets) with the key 
- * &quot;Create dog array&quot;.
  * <p>
- * The viewer will allow the user to easily navigate across the currently highlighted
- * snippet set by pressing the navigation buttons or using accelerator keys.
- * 
+ * When loading the source code, this viewer will automatically parse the files
+ * for any source fragments which are marked with &quot;snippet&quot; start/end
+ * tags that are embedded within Java comments. The viewer will allow the user
+ * to highlight these code snippets for easier inspection of specific code.
+ * <p>
+ * The text following immediately after the start tag will be used as the key
+ * for that snippet. Multiple snippets may share the same key, defining a
+ * &quot;snippet set&quot;. Snippet sets may even span across multiple source
+ * files. The key for each snippet set is displayed in a combobox to allow the
+ * user to select which snippet set should be highlighted. For example:
+ * <p>
+ * <
+ * pre><code>
+ *    //<snip>Create dog array ArrayList dogs = new ArrayList(); //</snip>
+ *
+ * [other code...]
+ *
+ *    //<snip>Create dog array dogs.add("Labrador"); dogs.add("Golden Retriever");
+ * dogs.add("Australian Shepherd"); //</snip>
+ * </code></pre> The above code would create a snippet set (containing 2
+ * snippets) with the key &quot;Create dog array&quot;.
+ * <p>
+ * The viewer will allow the user to easily navigate across the currently
+ * highlighted snippet set by pressing the navigation buttons or using
+ * accelerator keys.
+ *
  * @author aim
  */
 public class CodeViewer extends JPanel {
+
     public static final String SOURCES_JAVA = ".+\\.java";
 
     public static final String SOURCES_TEXT = ".+\\.properties|.+\\.txt|.+\\.html|.+\\.xml";
 
     public static final String SOURCES_IMAGES = ".+\\.jpg|.+\\.gif|.+\\.png";
-    
-    private static final Color DEFAULT_HIGHLIGHT_COLOR = new Color(255,255,176); 
+
+    private static final Color DEFAULT_HIGHLIGHT_COLOR = new Color(255, 255, 176);
     private static BufferedImage SNIPPET_GLYPH;
     private static String NO_SNIPPET_SELECTED;
 
     static final Logger logger = Logger.getLogger(CodeViewer.class.getName());
-    
+
     static {
         try {
             URL imageURL = CodeViewer.class.getResource("resources/images/snippetglyph.png");
@@ -129,37 +127,37 @@ public class CodeViewer extends JPanel {
         }
     }
     // Cache all processed code files in case they are reloaded later
-    private final Map<URL,CodeFileInfo> codeCache = new HashMap<URL,CodeFileInfo>();
-    
+    private final Map<URL, CodeFileInfo> codeCache = new HashMap<URL, CodeFileInfo>();
+
     private JComponent codeHighlightBar;
     private JComboBox snippetComboBox;
     private JComponent codePanel;
     private JLabel noCodeLabel;
     private JTabbedPane codeTabbedPane;
-    
+
     private Color highlightColor;
     private Highlighter.HighlightPainter snippetPainter;
-    
+
     private ResourceBundle bundle;
 
     // Current code file set
-    private Map<URL, CodeFileInfo> currentCodeFilesInfo; 
-    private List<URL> additionalSourceFiles; 
-    
+    private Map<URL, CodeFileInfo> currentCodeFilesInfo;
+    private List<URL> additionalSourceFiles;
+
     // Map of all snippets in current code file set    
     private final SnippetMap snippetMap = new SnippetMap();
-    
+
     private Action firstSnippetAction;
     private Action nextSnippetAction;
     private Action previousSnippetAction;
     private Action lastSnippetAction;
-    
+
     /**
      * Creates a new instance of CodeViewer
      */
     public CodeViewer() {
         setHighlightColor(DEFAULT_HIGHLIGHT_COLOR);
-        
+
         initActions();
 
         setLayout(new BorderLayout());
@@ -168,29 +166,29 @@ public class CodeViewer extends JPanel {
         add(codeHighlightBar, BorderLayout.NORTH);
         codePanel = createCodePanel();
         add(codePanel, BorderLayout.CENTER);
-        
+
         applyDefaults();
     }
-                
+
     protected JComponent createCodeHighlightBar() {
         GridBagLayout gridbag = new GridBagLayout();
         GridBagConstraints c = new GridBagConstraints();
         JPanel bar = new JPanel(gridbag);
-        
+
         bar.setBorder(new EmptyBorder(0, 0, 10, 0));
-        
-        NO_SNIPPET_SELECTED = getString("CodeViewer.snippets.selectOne", 
-                                        "Select One");
-       
+
+        NO_SNIPPET_SELECTED = getString("CodeViewer.snippets.selectOne",
+                "Select One");
+
         JLabel snippetSetsLabel = new JLabel(getString("CodeViewer.snippets.highlightCode",
-                                                       "Highlight code to: "));
+                "Highlight code to: "));
         c.gridx = 0;
         c.gridy = 0;
         c.anchor = GridBagConstraints.WEST;
         c.weightx = 0;
         gridbag.addLayoutComponent(snippetSetsLabel, c);
         bar.add(snippetSetsLabel);
-        
+
         snippetComboBox = new JComboBox();
         snippetComboBox.setMaximumRowCount(20);
         snippetComboBox.setRenderer(new SnippetCellRenderer(snippetComboBox.getRenderer()));
@@ -200,7 +198,7 @@ public class CodeViewer extends JPanel {
         c.weightx = 1;
         gridbag.addLayoutComponent(snippetComboBox, c);
         bar.add(snippetComboBox);
-            
+
         SnippetNavigator snippetNavigator = new SnippetNavigator(snippetMap);
         snippetNavigator.setNavigateNextAction(nextSnippetAction);
         snippetNavigator.setNavigatePreviousAction(previousSnippetAction);
@@ -209,27 +207,27 @@ public class CodeViewer extends JPanel {
         c.weightx = 0;
         gridbag.addLayoutComponent(snippetNavigator, c);
         bar.add(snippetNavigator);
-        
-        return bar;              
+
+        return bar;
     }
-    
+
     protected JComponent createCodePanel() {
-        
+
         JPanel panel = new RoundedPanel(new BorderLayout(), 10);
         panel.setBorder(new RoundedBorder(10));
-        
+
         noCodeLabel = new JLabel(getString("CodeViewer.noCodeLoaded", "no code loaded"));
         noCodeLabel.setHorizontalAlignment(JLabel.CENTER);
         panel.add(noCodeLabel, BorderLayout.CENTER);
         return panel;
     }
-    
+
     @Override
     public void updateUI() {
         super.updateUI();
-        applyDefaults();        
+        applyDefaults();
     }
-    
+
     protected void applyDefaults() {
         if (noCodeLabel != null) {
             noCodeLabel.setOpaque(false);
@@ -248,52 +246,52 @@ public class CodeViewer extends JPanel {
         }
         if (currentCodeFilesInfo != null) {
             Collection<CodeFileInfo> codeFiles = currentCodeFilesInfo.values();
-            for(CodeFileInfo cfi : codeFiles) {
+            for (CodeFileInfo cfi : codeFiles) {
                 makeSelectionTransparent(cfi.textPane, 180);
             }
         }
     }
-    
+
     private void makeSelectionTransparent(JEditorPane textPane, int alpha) {
         Color c = textPane.getSelectionColor();
         textPane.setSelectionColor(
                 new Color(c.getRed(), c.getGreen(), c.getBlue(), alpha));
     }
-    
+
     protected String getString(String key, String fallback) {
         String value = fallback;
         if (bundle == null) {
-            String bundleName = getClass().getPackage().getName()+".resources."+getClass().getSimpleName();
+            String bundleName = getClass().getPackage().getName() + ".resources." + getClass().getSimpleName();
             bundle = ResourceBundle.getBundle(bundleName);
         }
         try {
-            value = bundle != null? bundle.getString(key) : fallback;
-        
+            value = bundle != null ? bundle.getString(key) : fallback;
+
         } catch (MissingResourceException e) {
-            logger.log(Level.WARNING, "missing String resource " + key + 
-                    "; using fallback \"" +fallback + "\"");
+            logger.log(Level.WARNING, "missing String resource " + key
+                    + "; using fallback \"" + fallback + "\"");
         }
         return value;
     }
-    
+
     protected void initActions() {
         firstSnippetAction = new FirstSnippetAction();
         nextSnippetAction = new NextSnippetAction();
         previousSnippetAction = new PreviousSnippetAction();
         lastSnippetAction = new LastSnippetAction();
-        
+
         firstSnippetAction.setEnabled(false);
         nextSnippetAction.setEnabled(false);
         previousSnippetAction.setEnabled(false);
         lastSnippetAction.setEnabled(false);
-        
+
         getActionMap().put("NextSnippet", nextSnippetAction);
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ctrl N"),"NextSnippet");
-        
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ctrl N"), "NextSnippet");
+
         getActionMap().put("PreviousSnippet", previousSnippetAction);
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ctrl P"),"PreviousSnippet");
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ctrl P"), "PreviousSnippet");
     }
-    
+
     public void setHighlightColor(Color highlight) {
         if (!highlight.equals(highlightColor)) {
             highlightColor = highlight;
@@ -303,14 +301,14 @@ public class CodeViewer extends JPanel {
             }
         }
     }
-    
+
     public Color getHighlightColor() {
         return highlightColor;
     }
-    
+
     public void setSourceFiles(URL sourceFiles[]) {
-        if (currentCodeFilesInfo != null && additionalSourceFiles != null && sourceFiles != null &&
-                currentCodeFilesInfo.size() + additionalSourceFiles.size() == sourceFiles.length) {
+        if (currentCodeFilesInfo != null && additionalSourceFiles != null && sourceFiles != null
+                && currentCodeFilesInfo.size() + additionalSourceFiles.size() == sourceFiles.length) {
             List<URL> list = Arrays.asList(sourceFiles);
 
             if (list.containsAll(currentCodeFilesInfo.keySet()) && list.containsAll(additionalSourceFiles)) {
@@ -322,14 +320,14 @@ public class CodeViewer extends JPanel {
         // clear everything
         clearAllSnippetHighlights();
         snippetMap.clear();
-        
+
         if (sourceFiles == null) {
             // being reset to having no source files; need to clear everything
             currentCodeFilesInfo = null;
             additionalSourceFiles = null;
             configureCodePane(false);
             configureSnippetSetsComboBox();
- 
+
         } else {
             // Use LinkedHashMap to save source order
             currentCodeFilesInfo = new LinkedHashMap<URL, CodeFileInfo>();
@@ -442,6 +440,7 @@ public class CodeViewer extends JPanel {
     }
 
     private class SourceProcessor extends SwingWorker<Void, CodeFileInfo> {
+
         private final Map<URL, CodeFileInfo> codeFilesInfo;
 
         public SourceProcessor(Map<URL, CodeFileInfo> codeFilesInfo) {
@@ -454,14 +453,14 @@ public class CodeViewer extends JPanel {
                 if (entry.getValue() == null) {
                     entry.setValue(initializeCodeFileInfo(entry.getKey()));
                 }
-                
+
                 // We don't publish intermediate to avoid tab mixing 
                 codeCache.put(entry.getKey(), entry.getValue());
             }
-            
+
             return null;
         }
-        
+
         private CodeFileInfo initializeCodeFileInfo(URL sourceFile) {
             CodeFileInfo codeFileInfo = new CodeFileInfo();
             codeFileInfo.url = sourceFile;
@@ -505,7 +504,6 @@ public class CodeViewer extends JPanel {
     } // SourceProcessor
 
     // Called from Source Processing Thread in SwingWorker
- 
     private void configureCodePane(boolean hasCodeFiles) {
         if (hasCodeFiles) {
             if (codeTabbedPane == null) {
@@ -522,69 +520,93 @@ public class CodeViewer extends JPanel {
                 codePanel.remove(codeTabbedPane);
                 codeTabbedPane = null;
                 codePanel.add(noCodeLabel);
-                revalidate();               
+                revalidate();
             }
         }
     }
-    
+
     private void createCodeFileTab(CodeFileInfo codeFileInfo) {
         JLayeredPane layeredPane = JLayeredPane.getLayeredPaneAbove(codeFileInfo.textPane);
         JScrollPane scrollPane = new JScrollPane(layeredPane);
         scrollPane.setBorder(null);
         JPanel tabPanel = new JPanel();
         tabPanel.setLayout(new BorderLayout());
-        
+
         tabPanel.add(scrollPane, BorderLayout.CENTER);
-        
+
         codeTabbedPane.addTab(Utilities.getURLFileName(codeFileInfo.url), tabPanel);
     }
 
     private void registerSnippets(CodeFileInfo codeFileInfo) {
-        for(String snippetKey: codeFileInfo.snippets.keySet()) {
+        for (String snippetKey : codeFileInfo.snippets.keySet()) {
             List<Snippet> snippetCodeList = codeFileInfo.snippets.get(snippetKey);
-            for(Snippet snippet: snippetCodeList) {
+            for (Snippet snippet : snippetCodeList) {
                 snippetMap.add(snippetKey, codeFileInfo.url, snippet);
             }
         }
     }
-    
-    private void configureSnippetSetsComboBox() {        
+
+    private void configureSnippetSetsComboBox() {
         TreeSet sortedSnippets = new TreeSet(snippetMap.keySet());
-        String snippetSetKeys[] = (String[])sortedSnippets.toArray(new String[0]);
-        
+        String snippetSetKeys[] = (String[]) sortedSnippets.toArray(new String[0]);
+
         DefaultComboBoxModel snippetModel = new DefaultComboBoxModel();
-        for(String snippetKey : snippetSetKeys) {
+        for (String snippetKey : snippetSetKeys) {
             snippetModel.addElement(snippetKey);
         }
         snippetModel.insertElementAt(NO_SNIPPET_SELECTED, 0);
         snippetModel.setSelectedItem(NO_SNIPPET_SELECTED);
         snippetComboBox.setModel(snippetModel);
         codeHighlightBar.setVisible(snippetModel.getSize() > 1);
-        
+
     }
 
     /**
-     * Reads the java source file at the specified URL and returns an
-     * HTML version stylized for display
+     * Reads the java source file at the specified URL and returns an HTML
+     * version stylized for display
      */
     protected String loadSourceCode(URL sourceUrl) {
         InputStreamReader isr = null;
-        CodeStyler cv = new CodeStyler();        
+        CodeStyler cv = new CodeStyler();
         String styledCode = "<html><body bgcolor=\"#ffffff\"><pre>";
-        
+
         try {
+
+            /* 
+            Start Modification by Luis Arce from mc3d.cl
+            Intercept if it's file:// and try to map to the resource inside the JAR
+             */
+            if (sourceUrl != null && "file".equals(sourceUrl.getProtocol())) {
+                String path = sourceUrl.getPath();
+                // Extract relative path from a known point (adjust if necessary)
+                int idx = path.indexOf("/com/sun/swingset3/");
+                if (idx != -1) {
+                    String internalPath = path.substring(idx); // relative path inside the JAR
+                    System.out.println("Intercepted file path, trying to map to JAR resource: " + internalPath);
+                    URL jarResource = getClass().getResource(internalPath);
+                    if (jarResource != null) {
+                        sourceUrl = jarResource;
+                        System.out.println("Mapped to JAR resource: " + jarResource);
+                    } else {
+                        System.out.println("Resource not found in JAR: " + internalPath);
+                    }
+                }
+            }
+            /*
+        End modification by Luis Arce mc3d.cl
+             */
             isr = new InputStreamReader(sourceUrl.openStream(), "UTF-8");
             BufferedReader reader = new BufferedReader(isr);
-            
+
             // Read one line at a time, htmlizing using super-spiffy
             // html java code formating utility from www.CoolServlets.com
             String line = reader.readLine();
-            while(line != null) {
+            while (line != null) {
                 styledCode += cv.syntaxHighlight(line) + " \n ";
                 line = reader.readLine();
             }
             styledCode += "</pre></body></html>";
-            
+
         } catch (Exception ex) {
             ex.printStackTrace();
             return "Could not load file from: " + sourceUrl;
@@ -599,11 +621,11 @@ public class CodeViewer extends JPanel {
         }
         return styledCode;
     }
-    
+
     public void clearAllSnippetHighlights() {
         if (currentCodeFilesInfo != null) {
             snippetMap.setCurrentSet(null);
-            for(CodeFileInfo code : currentCodeFilesInfo.values()) {
+            for (CodeFileInfo code : currentCodeFilesInfo.values()) {
                 if (code != null && code.textPane != null) {
                     Highlighter highlighter = code.textPane.getHighlighter();
                     highlighter.removeAllHighlights();
@@ -613,16 +635,16 @@ public class CodeViewer extends JPanel {
             }
         }
     }
-    
+
     public void highlightSnippetSet(String snippetKey) {
 
         clearAllSnippetHighlights();
         snippetMap.setCurrentSet(snippetKey);
-        
+
         URL files[] = snippetMap.getFilesForSet(snippetKey);
         CodeFileInfo firstCodeFileInfo = null;
         Snippet firstSnippet = null;
-        for(URL file : files) {
+        for (URL file : files) {
             CodeFileInfo codeFileInfo = codeCache.get(file);
             Highlighter highlighter = codeFileInfo.textPane.getHighlighter();
             // now add highlight for each snippet in this file associated 
@@ -635,7 +657,7 @@ public class CodeViewer extends JPanel {
             for (Snippet snippet : snippets) {
                 try {
                     highlighter.addHighlight(snippet.startLine,
-                            snippet.endLine, snippetPainter );
+                            snippet.endLine, snippetPainter);
                     codeFileInfo.veneer.repaint();
                 } catch (BadLocationException e) {
                     e.printStackTrace();
@@ -645,7 +667,7 @@ public class CodeViewer extends JPanel {
         scrollToSnippet(firstCodeFileInfo, firstSnippet);
         snippetComboBox.setSelectedItem(snippetKey);
     }
-    
+
     protected void scrollToSnippet(CodeFileInfo codeFileInfo, Snippet snippet) {
         if (!codeFileInfo.textPane.isShowing()) {
             // Need to switch tabs to source file with first snippet
@@ -658,35 +680,35 @@ public class CodeViewer extends JPanel {
             Rectangle r2 = codeFileInfo.textPane.modelToView(snippet.endLine);
             codeFileInfo.textPane.scrollRectToVisible(
                     SwingUtilities.computeUnion(r1.x, r1.y,
-                    r1.width, r1.height, r2));
+                            r1.width, r1.height, r2));
         } catch (BadLocationException e) {
             System.err.println(e);
         }
         nextSnippetAction.setEnabled(snippetMap.nextSnippetExists());
         previousSnippetAction.setEnabled(snippetMap.previousSnippetExists());
     }
-    
+
     protected String getCurrentSnippetKey() {
         String key = snippetMap.getCurrentSet();
-        return key != null? key : NO_SNIPPET_SELECTED;
+        return key != null ? key : NO_SNIPPET_SELECTED;
     }
-    
+
     protected Snippet getCurrentSnippet() {
         return snippetMap.getCurrentSnippet();
     }
-    
+
     protected void moveToFirstSnippet() {
-       Snippet firstSnippet = snippetMap.firstSnippet();    
-       if (firstSnippet != null) {
+        Snippet firstSnippet = snippetMap.firstSnippet();
+        if (firstSnippet != null) {
             CodeFileInfo codeFileInfo = codeCache.get(snippetMap.getFileForSnippet(firstSnippet));
             scrollToSnippet(codeFileInfo, firstSnippet);
         } else {
             Toolkit.getDefaultToolkit().beep();
-        }        
+        }
     }
-    
+
     protected void moveToNextSnippet() {
-        Snippet nextSnippet = snippetMap.nextSnippet();    
+        Snippet nextSnippet = snippetMap.nextSnippet();
         if (nextSnippet != null) {
             CodeFileInfo codeFileInfo = codeCache.get(snippetMap.getFileForSnippet(nextSnippet));
             scrollToSnippet(codeFileInfo, nextSnippet);
@@ -694,7 +716,7 @@ public class CodeViewer extends JPanel {
             Toolkit.getDefaultToolkit().beep();
         }
     }
-    
+
     protected void moveToPreviousSnippet() {
         Snippet previousSnippet = snippetMap.previousSnippet();
         if (previousSnippet != null) {
@@ -702,171 +724,185 @@ public class CodeViewer extends JPanel {
             scrollToSnippet(codeFileInfo, previousSnippet);
         } else {
             Toolkit.getDefaultToolkit().beep();
-        }         
-  
+        }
+
     }
- 
+
     protected void moveToLastSnippet() {
-       Snippet lastSnippet = snippetMap.lastSnippet();    
-       if (lastSnippet != null) {
+        Snippet lastSnippet = snippetMap.lastSnippet();
+        if (lastSnippet != null) {
             CodeFileInfo codeFileInfo = codeCache.get(snippetMap.getFileForSnippet(lastSnippet));
             scrollToSnippet(codeFileInfo, lastSnippet);
         } else {
             Toolkit.getDefaultToolkit().beep();
-        }        
+        }
     }
-    
-    private class SnippetActivator implements ActionListener {        
+
+    private class SnippetActivator implements ActionListener {
+
         public void actionPerformed(ActionEvent e) {
-            String snippetKey = (String)snippetComboBox.getSelectedItem();
+            String snippetKey = (String) snippetComboBox.getSelectedItem();
             if (!snippetKey.equals(NO_SNIPPET_SELECTED)) {
-                logger.log(Level.FINEST, "highlighting new snippet:"+snippetKey+".");
+                logger.log(Level.FINEST, "highlighting new snippet:" + snippetKey + ".");
                 highlightSnippetSet(snippetKey);
             } else {
                 clearAllSnippetHighlights();
             }
         }
     }
-    
+
     private abstract class SnippetAction extends AbstractAction {
+
         public SnippetAction(String name, String shortDescription) {
             super(name);
             putValue(AbstractAction.SHORT_DESCRIPTION, shortDescription);
-        }      
+        }
     }
+
     private class FirstSnippetAction extends SnippetAction {
+
         public FirstSnippetAction() {
             super("FirstSnippet",
                     getString("CodeViewer.snippets.navigateFirst",
-                              "move to first code snippet within highlighted set"));
-        } 
+                            "move to first code snippet within highlighted set"));
+        }
+
         public void actionPerformed(ActionEvent e) {
             moveToFirstSnippet();
-        }        
-    }
-    
-    private class NextSnippetAction extends SnippetAction {
-        public NextSnippetAction() {
-            super("NextSnippet", 
-                    getString("CodeViewer.snippets.navigateNext",
-                              "move to next code snippet within highlighted set"));
         }
+    }
+
+    private class NextSnippetAction extends SnippetAction {
+
+        public NextSnippetAction() {
+            super("NextSnippet",
+                    getString("CodeViewer.snippets.navigateNext",
+                            "move to next code snippet within highlighted set"));
+        }
+
         @Override
         public void actionPerformed(ActionEvent e) {
             moveToNextSnippet();
         }
     }
-    
+
     private class PreviousSnippetAction extends SnippetAction {
+
         public PreviousSnippetAction() {
-            super("PreviousSnippet", 
+            super("PreviousSnippet",
                     getString("CodeViewer.snippets.navigatePrevious",
-                              "move to previous code fragment within highlighted set"));
+                            "move to previous code fragment within highlighted set"));
         }
+
         @Override
         public void actionPerformed(ActionEvent e) {
             moveToPreviousSnippet();
         }
     }
-  
+
     private class LastSnippetAction extends SnippetAction {
+
         public LastSnippetAction() {
-            super("LastSnippet", 
+            super("LastSnippet",
                     getString("CodeViewer.snippets.navigateLast",
-                              "move to last code snippet within highlighted set"));
-        } 
+                            "move to last code snippet within highlighted set"));
+        }
+
         public void actionPerformed(ActionEvent e) {
             moveToLastSnippet();
-        }        
-    }
-    
-    private class SnippetCellRenderer implements ListCellRenderer {
-        private JLabel delegate;
-        
-        public SnippetCellRenderer(ListCellRenderer delegate) {
-            this.delegate = (JLabel)delegate;
         }
+    }
+
+    private class SnippetCellRenderer implements ListCellRenderer {
+
+        private JLabel delegate;
+
+        public SnippetCellRenderer(ListCellRenderer delegate) {
+            this.delegate = (JLabel) delegate;
+        }
+
         public Component getListCellRendererComponent(JList list,
                 Object value,
                 int index,
                 boolean isSelected,
                 boolean cellHasFocus) {
-            
-            JLabel renderer = (JLabel)((ListCellRenderer)delegate).getListCellRendererComponent(list,
+
+            JLabel renderer = (JLabel) ((ListCellRenderer) delegate).getListCellRendererComponent(list,
                     value, index, isSelected, cellHasFocus);
-            
-            int count = snippetMap.getSnippetCountForSet((String)value);
-            
+
+            int count = snippetMap.getSnippetCountForSet((String) value);
+
             Color foreground = renderer.getForeground();
-            Color countForeground = Utilities.deriveColorHSB(foreground, 
-                    0, 0, isSelected? .5f : .4f);
-            
-            String text = "<html><font color=\"" +
-                    Utilities.getHTMLColorString(foreground) + "\">" + value + 
-                    "</font>" +
-                    "<font color=\"" +
-                    Utilities.getHTMLColorString(countForeground) + "\">" +
-                    (count > 0? " (" + count + (count > 1? " snippets)" : " snippet)") : "") +
-                    "</font></html>";
+            Color countForeground = Utilities.deriveColorHSB(foreground,
+                    0, 0, isSelected ? .5f : .4f);
+
+            String text = "<html><font color=\""
+                    + Utilities.getHTMLColorString(foreground) + "\">" + value
+                    + "</font>"
+                    + "<font color=\""
+                    + Utilities.getHTMLColorString(countForeground) + "\">"
+                    + (count > 0 ? " (" + count + (count > 1 ? " snippets)" : " snippet)") : "")
+                    + "</font></html>";
 
             renderer.setText(text);
             return renderer;
         }
     }
-    
 
- 
     private static class CodeFileInfo {
+
         public URL url;
         public String styled;
         public HashMap<String, List<Snippet>> snippets = new HashMap<String, List<Snippet>>();
         public JEditorPane textPane;
         public JPanel veneer;
     }
-    
+
     private static class Stacker extends JLayeredPane {
+
         private Component master; // dictates sizing, scrolling
-        
+
         public Stacker(Component master) {
             this.master = master;
             setLayout(null);
             add(master, JLayeredPane.DEFAULT_LAYER);
         }
-        
+
         public Dimension getPreferredSize() {
-            return master.getPreferredSize();         
+            return master.getPreferredSize();
         }
-        
+
         public void doLayout() {
             // ensure all layers are sized the same
             Dimension size = getSize();
             Component layers[] = getComponents();
-            for(Component layer : layers) {
+            for (Component layer : layers) {
                 layer.setBounds(0, 0, size.width, size.height);
-            }                      
-        } 
+            }
+        }
     }
-    
-    private class CodeVeneer extends JPanel {        
+
+    private class CodeVeneer extends JPanel {
+
         private CodeFileInfo codeFileInfo;
-        
+
         public CodeVeneer(CodeFileInfo codeFileInfo) {
             this.codeFileInfo = codeFileInfo;
             setOpaque(false);
-            setLayout(null);            
+            setLayout(null);
         }
-        
+
         @Override
         protected void paintComponent(Graphics g) {
 
             String snippetKey = getCurrentSnippetKey();
-            if (snippetKey != NO_SNIPPET_SELECTED) { 
+            if (snippetKey != NO_SNIPPET_SELECTED) {
                 // Count total number of snippets for key
                 int snippetTotal = 0;
                 int snippetIndex = 0;
                 List<Snippet> snippetList = null;
-                URL files[] = snippetMap.getFilesForSet(snippetKey);               
-                for(URL file : files) {
+                URL files[] = snippetMap.getFilesForSet(snippetKey);
+                for (URL file : files) {
                     CodeFileInfo codeFileInfo = codeCache.get(file);
                     if (this.codeFileInfo == codeFileInfo) {
                         snippetList = codeFileInfo.snippets.get(snippetKey);
@@ -874,48 +910,48 @@ public class CodeViewer extends JPanel {
                     }
                     snippetTotal += (codeFileInfo.snippets.get(snippetKey).size());
                 }
-                
+
                 if (snippetList != null) {
                     Snippet currentSnippet = snippetMap.getCurrentSnippet();
                     CodeFileInfo currentSnippetCodeFileInfo = codeCache.get(
                             snippetMap.getFileForSnippet(currentSnippet));
-                    
+
                     Font font = g.getFont();
                     g.setFont(font.deriveFont(10f));
                     FontMetrics metrics = g.getFontMetrics();
-                    
+
                     g.setColor(getHighlightColor());
-                    
+
                     Graphics2D g2Alpha = null; // cache composite                  
-                    for(Snippet snippet : snippetList) {
-                        Graphics2D g2 = (Graphics2D)g;
+                    for (Snippet snippet : snippetList) {
+                        Graphics2D g2 = (Graphics2D) g;
 
                         try {
-                            if (currentSnippetCodeFileInfo != codeFileInfo ||
-                                    currentSnippet != snippet) {
+                            if (currentSnippetCodeFileInfo != codeFileInfo
+                                    || currentSnippet != snippet) {
                                 // if not painting the "current" snippet, then fade the glyph
                                 if (g2Alpha == null) {
                                     // first time, so create composite
-                                    g2Alpha = (Graphics2D)g2.create();                                
+                                    g2Alpha = (Graphics2D) g2.create();
                                     g2Alpha.setComposite(AlphaComposite.getInstance(
                                             AlphaComposite.SRC_OVER, 0.6f));
                                 }
                                 g2 = g2Alpha;
                             }
                             Rectangle snipRect = codeFileInfo.textPane.modelToView(snippet.startLine);
-                            
+
                             //String glyphLabel = snippetIndex++ + "/" + snippetTotal;
                             String glyphLabel = "" + snippetIndex++;
                             Rectangle labelRect = metrics.getStringBounds(glyphLabel, g2).getBounds();
-      
+
                             g2.drawImage(SNIPPET_GLYPH, 0, snipRect.y, this);
                             g2.setColor(Color.black);
                             g2.drawString(glyphLabel,
-                                    (SNIPPET_GLYPH.getWidth(this) - labelRect.width)/2,
-                                    snipRect.y +
-                                    (SNIPPET_GLYPH.getHeight(this) - labelRect.height)/2 +
-                                    metrics.getAscent());
-                            
+                                    (SNIPPET_GLYPH.getWidth(this) - labelRect.width) / 2,
+                                    snipRect.y
+                                    + (SNIPPET_GLYPH.getHeight(this) - labelRect.height) / 2
+                                    + metrics.getAscent());
+
                         } catch (BadLocationException e) {
                             System.err.println(e);
                         }
