@@ -14,7 +14,7 @@
     <jar href="lib/TimingFramework.jar"/>
     <jar href="lib/swing-worker.jar"/>
     <jar href="lib/metainf-services-1.9.jar"/>
-    <jar href="lib/swingx.jar"/>
+    <jar href="lib/SwingX.jar"/>
   </resources>
   <application-desc main-class="com.sun.swingset3.SwingSet3"/>
 </jnlp>
