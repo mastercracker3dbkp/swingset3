@@ -9,12 +9,12 @@
     <shortcut online="true"/>
   </information>
   <resources>
-    <jar href="lib/SwingSet3.jar" main="false"/>
-    <jar href="lib/AppFramework.jar"/>
-    <jar href="lib/TimingFramework.jar"/>
-    <jar href="lib/swing-worker.jar"/>
-    <jar href="lib/metainf-services-1.9.jar"/>
-    <jar href="lib/SwingX.jar"/>
+    <jar href="trunk/SwingSet3/lib/SwingSet3.jar" main="false"/>
+    <jar href="trunk/SwingSet3/lib/AppFramework.jar"/>
+    <jar href="trunk/SwingSet3/lib/TimingFramework.jar"/>
+    <jar href="trunk/SwingSet3/lib/swing-worker.jar"/>
+    <jar href="trunk/SwingSet3/lib/metainf-services-1.9.jar"/>
+    <jar href="trunk/SwingSet3/lib/SwingX.jar"/>
   </resources>
   <application-desc main-class="com.sun.swingset3.SwingSet3"/>
 </jnlp>
