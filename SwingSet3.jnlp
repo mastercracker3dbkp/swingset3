@@ -1,0 +1,20 @@
+<jnlp spec="6.0+">
+  <information>
+    <title>SwingSet3</title>
+    <vendor>Sun Microsystems, Inc.</vendor>
+    <homepage href="https://swingset3.dev.java.net"/>
+    <description>Demo to showcase features of the Swing UI toolkit in Java 6</description>
+    <icon href="swingset3/resources/images/splash.png" kind="splash"/>
+    <offline-allowed/>
+    <shortcut online="true"/>
+  </information>
+  <resources>
+    <jar href="lib/SwingSet3.jar" main="false"/>
+    <jar href="lib/AppFramework.jar"/>
+    <jar href="lib/TimingFramework.jar"/>
+    <jar href="lib/swing-worker.jar"/>
+    <jar href="lib/metainf-services-1.9.jar"/>
+    <jar href="lib/SwingX.jar"/>
+  </resources>
+  <application-desc main-class="com.sun.swingset3.SwingSet3"/>
+</jnlp>
