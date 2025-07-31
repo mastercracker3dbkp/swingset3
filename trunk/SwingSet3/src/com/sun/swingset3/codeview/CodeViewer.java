@@ -574,24 +574,23 @@ public class CodeViewer extends JPanel {
 
             /* 
             Start Modification by Luis Arce from mc3d.cl
-            Intercept if it's file:// and try to map to the resource inside the JAR
+            Intercept URL and try to map to the resource inside the JAR
              */
-            if (sourceUrl != null && "file".equals(sourceUrl.getProtocol())) {
-                String path = sourceUrl.getPath();
-                // Extract relative path from a known point (adjust if necessary)
-                int idx = path.indexOf("/com/sun/swingset3/");
-                if (idx != -1) {
-                    String internalPath = path.substring(idx); // relative path inside the JAR
-                    System.out.println("Intercepted file path, trying to map to JAR resource: " + internalPath);
-                    URL jarResource = getClass().getResource(internalPath);
-                    if (jarResource != null) {
-                        sourceUrl = jarResource;
-                        System.out.println("Mapped to JAR resource: " + jarResource);
-                    } else {
-                        System.out.println("Resource not found in JAR: " + internalPath);
-                    }
+            String path = sourceUrl.getPath();
+            // Extract relative path from a known point (adjust if necessary)
+            int idx = path.indexOf("/com/sun/swingset3/");
+            if (idx != -1) {
+                String internalPath = path.substring(idx); // relative path inside the JAR
+                System.out.println("Intercepted file path, trying to map to JAR resource: " + internalPath);
+                URL jarResource = getClass().getResource(internalPath);
+                if (jarResource != null) {
+                    sourceUrl = jarResource;
+                    System.out.println("Mapped to JAR resource: " + jarResource);
+                } else {
+                    System.out.println("Resource not found in JAR: " + internalPath);
                 }
             }
+
             /*
         End modification by Luis Arce mc3d.cl
              */
